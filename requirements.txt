@@ -1,0 +1,17 @@
+# Core analysis stack (see synopsis, Analytic Approach)
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.3
+xgboost>=2.0
+statsmodels>=0.14
+scipy>=1.11
+
+# Notebooks and visualization
+jupyterlab>=4.0
+matplotlib>=3.7
+seaborn>=0.13
+
+# Data acquisition and file handling
+requests>=2.31
+openpyxl>=3.1
+pyarrow>=14.0

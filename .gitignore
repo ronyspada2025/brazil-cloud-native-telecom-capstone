@@ -1,0 +1,21 @@
+# Raw data extracts are large; download locally (see README / src/data_loader.py)
+data/raw/*
+!data/raw/.gitkeep
+
+# Large processed intermediates (commit only the three declared outputs)
+data/processed/*.parquet
+data/processed/*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
