@@ -2,15 +2,37 @@
 
 ## The State of Cloud-Native Transformation on Telecommunications Networks in Brazil
 
-Author: Rony Anderson Spada Pedroso  
-Institution: Walsh College  
-Course: QM640: Data Analytics Capstone  
+**Author:** Rony Anderson Spada Pedroso  
+**Institution:** Walsh College  
+**Course:** QM640: Data Analytics Capstone  
+**Instructor:** Dr. Srabashi Basu  
+**Current report version:** Four-RQ APA 7 interim report with exploratory data analysis  
 
-## Repository Purpose
+## Project Overview
 
-This repository contains the data-processing, exploratory data analysis, and reporting assets for the capstone project on Brazil's municipal-level cloud-native telecommunications transformation. The project uses open public data from Anatel and IBGE to evaluate 5G SA/NR rollout, fiber-readiness intensity, service-quality indicators, digital-readiness patterns, and private-network adoption.
+This repository supports a data analytics capstone project evaluating the municipal-level state of cloud-native telecommunications transformation in Brazil. The project uses open public data from the Brazilian National Telecommunications Agency (Anatel) and the Brazilian Institute of Geography and Statistics (IBGE) to analyze where 5G NR/SA, fiber intensity, digital-readiness indicators, and private-network/SLP adoption are most concentrated.
 
-## Revised Repository Directory Structure
+The revised interim report uses a four-research-question structure. Two earlier questions from the synopsis—network-generation QoS comparison and customer-satisfaction prediction—were removed from the active interim scope because the uploaded merged municipal dataset does not yet include `DROP_RATE` or `SATISFACTION`. Download speed remains part of the exploratory analysis, but it is no longer treated as a standalone research question.
+
+## Active Research Questions
+
+### RQ1 — 5G NR/SA Rollout Classification
+
+Can municipal socioeconomic markers, population density, fiber intensity, and existing mobile infrastructure predict whether a Brazilian municipality has achieved high-density 5G NR/SA deployment?
+
+### RQ2 — Infrastructure Drivers of 5G NR/SA Station Density
+
+Which socioeconomic and infrastructure characteristics are the strongest predictors of population-normalized 5G NR/SA station density across Brazilian municipalities?
+
+### RQ3 — Municipal Digital-Readiness Segmentation
+
+How do Brazilian municipalities cluster based on digital-transformation readiness indicators, and are these clusters associated with geographic regions?
+
+### RQ4 — Private Network / SLP Adoption Drivers
+
+Which municipal socioeconomic, infrastructure, and mobile-network characteristics influence the likelihood or intensity of private-network/SLP adoption?
+
+## Repository Structure
 
 ```text
 .
@@ -23,39 +45,51 @@ This repository contains the data-processing, exploratory data analysis, and rep
 │   └── processed/
 │       └── merged_municipal_dataset.csv
 ├── docs/
-│   └── capstone_synopsis_brazil_telecom_RONY_PEDROSO.pdf
+│   ├── DATA_AVAILABILITY.md
+│   ├── DATA_DICTIONARY.md
+│   ├── METHODOLOGY.md
+│   ├── REPORT_CHANGELOG.md
+│   └── RESEARCH_QUESTIONS.md
 ├── notebooks/
 │   ├── 01_data_understanding_and_cleaning.ipynb
 │   ├── 02_complete_eda.ipynb
 │   └── 03_rq_exploratory_analysis.ipynb
 ├── reports/
 │   ├── interim/
-│   │   ├── QM640_Interim_Report_APA7_Revised.docx
-│   │   └── QM640_Interim_Report_APA7_Revised.pdf
+│   │   ├── QM640_Interim_Report_Four_RQs_APA7.docx
+│   │   └── QM640_Interim_Report_Four_RQs_APA7.pdf
 │   ├── final/
 │   └── figures/
 ├── src/
+│   ├── __init__.py
+│   ├── data_loader.py
+│   ├── model_evaluation.py
+│   └── visualization_utils.py
 └── tests/
 ```
 
 ## Notebook Execution Order
 
+Run the notebooks in this order:
+
 1. `notebooks/01_data_understanding_and_cleaning.ipynb`
 2. `notebooks/02_complete_eda.ipynb`
 3. `notebooks/03_rq_exploratory_analysis.ipynb`
 
-## Research Questions
+The first notebook checks the dataset structure, cleans duplicate municipality keys, aligns variable names, and engineers normalized intensity variables. The second notebook performs full exploratory data analysis. The third notebook generates RQ-specific exploratory analyses and preliminary models.
 
-- RQ1: Can municipal socioeconomic markers and existing infrastructure predict high-density 5G SA deployment?
-- RQ2: Is there a statistically significant difference in service-quality metrics across network generations?
-- RQ3: Which infrastructure characteristics are the strongest predictors of virtualized base-station density?
-- RQ4: How do municipalities cluster by digital-transformation readiness, and are clusters independent of region?
-- RQ5: Can technical network indicators predict high customer satisfaction?
-- RQ6: Which industrial, agricultural, and infrastructure factors influence private 5G/SLP presence?
+## Interim Data Status
 
-## Data Availability
+The uploaded merged municipal dataset initially contained 10,107 rows and 25 columns. After duplicate-key correction, the valid municipal analysis frame contains 5,571 rows, matching the intended Brazilian municipality frame.
 
-The processed municipal dataset is stored under `data/processed/`. Large raw Anatel extracts should not be committed directly to GitHub. They should be reproduced through official public sources and documented acquisition notebooks.
+Key interim findings:
+
+- The municipal frame is complete after cleaning.
+- Binary fiber presence is saturated and should not be used as the primary readiness indicator.
+- Fiber intensity, measured as fiber accesses per 100 inhabitants, is more useful analytically.
+- 5G NR/SA station deployment is highly uneven and zero-inflated.
+- Download speed is retained as a supporting EDA variable.
+- `DROP_RATE` and `SATISFACTION` are excluded from the active interim scope because they are not present in the uploaded merged dataset.
 
 ## Environment Setup
 
@@ -63,6 +97,15 @@ The processed municipal dataset is stored under `data/processed/`. Large raw Ana
 pip install -r requirements.txt
 ```
 
-## Notes
+## Reproducibility Notes
 
-The interim EDA identified duplicate-key merge inflation in the uploaded dataset and corrected the analysis frame to 5,571 municipalities. The EDA also found that binary fiber presence is saturated and that fiber intensity is more analytically useful.
+Large raw Anatel extracts should not be committed directly to GitHub. The repository should store reproducible acquisition notes and processed municipal-level files. Raw files can be regenerated or downloaded from official public sources and documented in `docs/DATA_AVAILABILITY.md`.
+
+## Current Report
+
+The latest interim report is stored in:
+
+```text
+reports/interim/QM640_Interim_Report_Four_RQs_APA7.pdf
+reports/interim/QM640_Interim_Report_Four_RQs_APA7.docx
+```
