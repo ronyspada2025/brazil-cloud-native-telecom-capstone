@@ -2,110 +2,89 @@
 
 ## The State of Cloud-Native Transformation on Telecommunications Networks in Brazil
 
-**Author:** Rony Anderson Spada Pedroso  
-**Institution:** Walsh College  
-**Course:** QM640: Data Analytics Capstone  
-**Instructor:** Dr. Srabashi Basu  
-**Current report version:** Four-RQ APA 7 interim report with exploratory data analysis  
+**Author:** Rony Anderson Spada Pedroso
+**Institution:** Walsh College
+**Course:** QM640: Data Analytics Capstone
+**Mentor:** Sridhar Srinivas
+**Current report version:** Final report (four-RQ, leakage-audited design)
 
 ## Project Overview
 
-This repository supports a data analytics capstone project evaluating the municipal-level state of cloud-native telecommunications transformation in Brazil. The project uses open public data from the Brazilian National Telecommunications Agency (Anatel) and the Brazilian Institute of Geography and Statistics (IBGE) to analyze where 5G NR/SA, fiber intensity, digital-readiness indicators, and private-network/SLP adoption are most concentrated.
+This repository supports a data analytics capstone project evaluating the municipal-level state of cloud-native telecommunications transformation in Brazil. It uses open public data from the Brazilian National Telecommunications Agency (Anatel) and the Brazilian Institute of Geography and Statistics (IBGE) to analyze where 5G NR/SA rollout, fiber intensity, digital readiness, and private-network/SLP adoption are concentrated across all 5,571 municipalities.
 
-The revised interim report uses a four-research-question structure. Two earlier questions from the synopsis—network-generation QoS comparison and customer-satisfaction prediction—were removed from the active interim scope because the uploaded merged municipal dataset does not yet include `DROP_RATE` or `SATISFACTION`. Download speed remains part of the exploratory analysis, but it is no longer treated as a standalone research question.
+Two questions from the original synopsis — a network-generation QoS comparison and a customer-satisfaction prediction — were removed at the interim stage because the merged municipal dataset does not include `DROP_RATE` or `SATISFACTION`; they remain documented future extensions.
 
-## Active Research Questions
+## Research Questions
 
-### RQ1 — 5G NR/SA Rollout Classification
+- **RQ1 — Rollout classification.** Can exogenous socioeconomic and infrastructure characteristics predict whether a municipality is a high-density 5G NR/SA rollout site?
+- **RQ2 — Infrastructure drivers of station density.** Which exogenous characteristics explain the population-normalized intensity of NR/SA station deployment?
+- **RQ3 — Digital-readiness segmentation.** How do municipalities cluster on digital-readiness indicators, and is cluster membership independent of geographic region?
+- **RQ4 — Private-network/SLP intensity drivers.** Which municipal characteristics drive high private-network (SLP) deployment intensity?
 
-Can municipal socioeconomic markers, population density, fiber intensity, and existing mobile infrastructure predict whether a Brazilian municipality has achieved high-density 5G NR/SA deployment?
+## Headline Results (held-out, seed = 42)
 
-### RQ2 — Infrastructure Drivers of 5G NR/SA Station Density
+| RQ | Model | Key metrics |
+|---|---|---|
+| RQ1 | Random forest (leakage-free, tuned) | Accuracy .915, F1 .808, ROC-AUC .927 (naive spec: .965) |
+| RQ2 | RidgeCV | R² .02 (raw), .06 (log1p), .11 (NR-present conditional) |
+| RQ3 | K-means (k = 2) + chi-square | Silhouette .305, bootstrap ARI .99, χ²(4) = 254.1, p < .001 |
+| RQ4 | Balanced logistic regression | ROC-AUC .810, recall .747, LLR p < .001 |
 
-Which socioeconomic and infrastructure characteristics are the strongest predictors of population-normalized 5G NR/SA station density across Brazilian municipalities?
+## Reproduction
 
-### RQ3 — Municipal Digital-Readiness Segmentation
+The authoritative reproduction path is the single-command pipeline:
 
-How do Brazilian municipalities cluster based on digital-transformation readiness indicators, and are these clusters associated with geographic regions?
+```bash
+pip install -r requirements.txt
+python final_pipeline.py
+```
 
-### RQ4 — Private Network / SLP Adoption Drivers
+It regenerates every number, table, and figure of the final report from the committed analysis input (`data/processed/merged_municipal_dataset.csv`) with a fixed seed (42), writing outputs to `reports/figures` and `reports/tables` (including a machine-readable `headline_results.json`).
 
-Which municipal socioeconomic, infrastructure, and mobile-network characteristics influence the likelihood or intensity of private-network/SLP adoption?
+`notebooks/06_final_report_pipeline_colab.ipynb` runs the identical pipeline in Google Colab (~3 minutes), prints a headline-results check against the final report, and packages all outputs for download.
 
 ## Repository Structure
 
 ```text
 .
+├── .gitignore
 ├── LICENSE
 ├── README.md
 ├── requirements.txt
+├── final_pipeline.py            (authoritative reproduction path)
 ├── data/
-│   ├── raw/
-│   │   └── .gitkeep
+│   ├── raw/                     (git-ignored; downloaded locally per src/data_loader.py)
 │   └── processed/
-│       └── merged_municipal_dataset.csv
+│       └── merged_municipal_dataset.csv   (committed analysis input, 1.8 MB)
 ├── docs/
-│   ├── DATA_AVAILABILITY.md
-│   ├── DATA_DICTIONARY.md
-│   ├── METHODOLOGY.md
-│   ├── REPORT_CHANGELOG.md
-│   └── RESEARCH_QUESTIONS.md
+│   └── DATA_DICTIONARY.md
 ├── notebooks/
-│   ├── 01_data_understanding_and_cleaning.ipynb
-│   ├── 02_complete_eda.ipynb
-│   └── 03_rq_exploratory_analysis.ipynb
+│   ├── 01_data_cleaning_and_alignment.ipynb   (scaffold: original acquisition design)
+│   ├── 02_feature_engineering.ipynb
+│   ├── 03_exploratory_data_analysis.ipynb
+│   ├── 04_statistical_tests_rq2_rq4.ipynb
+│   ├── 05_ml_pipelines_rq1_rq3_rq5_rq6.ipynb
+│   └── 06_final_report_pipeline_colab.ipynb   (Colab mirror of final_pipeline.py)
 ├── reports/
-│   ├── interim/
-│   │   ├── QM640_Interim_Report_Four_RQs_APA7.docx
-│   │   └── QM640_Interim_Report_Four_RQs_APA7.pdf
-│   ├── final/
-│   └── figures/
-├── src/
-│   ├── __init__.py
-│   ├── data_loader.py
-│   ├── model_evaluation.py
-│   └── visualization_utils.py
-└── tests/
+│   ├── figures/                 (Figures 1–9 of the final report)
+│   └── tables/                  (result tables + headline_results.json)
+└── src/
+    ├── __init__.py
+    ├── data_loader.py
+    ├── feature_engineering.py
+    ├── model_evaluation.py
+    └── visualization_utils.py
 ```
 
-## Notebook Execution Order
+The five scaffold notebooks document the original seven-extract acquisition design from the synopsis; `final_pipeline.py` and its Colab counterpart are the authoritative reproduction paths for the final report.
 
-Run the notebooks in this order:
+## Data Notes
 
-1. `notebooks/01_data_understanding_and_cleaning.ipynb`
-2. `notebooks/02_complete_eda.ipynb`
-3. `notebooks/03_rq_exploratory_analysis.ipynb`
+- The supplied merged dataset contains 10,107 rows × 25 columns with exactly 5,571 unique municipalities; `final_pipeline.py` drops 193 exact duplicates, collapses 4,343 duplicate municipality keys (first non-null for stable variables; sum for `SLP_STATION_CNT`; max for `PRIVATE_5G_LIC`), and restores the one-row-per-municipality frame (5,571 × 42 after feature engineering).
+- The binary fiber flag is saturated (100% of non-missing values equal 1); `FIBER_PER_100` is the substantive fiber-readiness measure.
+- `NR_ACCESS_PER_100` and `AVG_DL_SPEED` are excluded from the RQ1/RQ2 predictor sets as near-target (leakage) variables.
+- Raw Anatel/IBGE extracts are excluded from version control because of their size; acquisition is documented in `src/data_loader.py` (Wayback snapshots, data-panel extraction, and file-server metadata parsing). Source landing pages were verified July 23, 2026; raw extracts acquired August 2026.
 
-The first notebook checks the dataset structure, cleans duplicate municipality keys, aligns variable names, and engineers normalized intensity variables. The second notebook performs full exploratory data analysis. The third notebook generates RQ-specific exploratory analyses and preliminary models.
+## License
 
-## Interim Data Status
-
-The uploaded merged municipal dataset initially contained 10,107 rows and 25 columns. After duplicate-key correction, the valid municipal analysis frame contains 5,571 rows, matching the intended Brazilian municipality frame.
-
-Key interim findings:
-
-- The municipal frame is complete after cleaning.
-- Binary fiber presence is saturated and should not be used as the primary readiness indicator.
-- Fiber intensity, measured as fiber accesses per 100 inhabitants, is more useful analytically.
-- 5G NR/SA station deployment is highly uneven and zero-inflated.
-- Download speed is retained as a supporting EDA variable.
-- `DROP_RATE` and `SATISFACTION` are excluded from the active interim scope because they are not present in the uploaded merged dataset.
-
-## Environment Setup
-
-```bash
-pip install -r requirements.txt
-```
-
-## Reproducibility Notes
-
-Large raw Anatel extracts should not be committed directly to GitHub. The repository should store reproducible acquisition notes and processed municipal-level files. Raw files can be regenerated or downloaded from official public sources and documented in `docs/DATA_AVAILABILITY.md`.
-
-## Current Report
-
-The latest interim report is stored in:
-
-```text
-reports/interim/QM640_Interim_Report_Four_RQs_APA7.pdf
-reports/interim/QM640_Interim_Report_Four_RQs_APA7.docx
-```
+MIT — see `LICENSE`.
