@@ -18,10 +18,8 @@ Analysis input: `data/processed/merged_municipal_dataset.csv` (10,107 × 25 as s
 | SA_ERB_PER_100K_POP | NR stations per 100,000 population | Continuous | RQ2 target |
 | NR_ACCESS_PER_100 | NR accesses per 100 inhabitants | Continuous | RQ3 feature; **excluded from RQ1/RQ2 (leakage)** |
 | AVG_DL_SPEED | Mean measured download speed (Mbps) | Continuous | EDA outcome; RQ3 feature; **excluded from RQ1/RQ2 (leakage)** |
-| SLP_STATION_CNT | Private-network (SLP) station count (summed on duplicate-key collapse) | Integer | RQ4 target construction |
+| SLP_STATION_CNT | Private-network (SLP) station count; the only field that differs between the two rows a municipality receives from the one-to-many SLP-registry join, so it is summed on duplicate-key collapse | Integer | RQ4 target construction |
 | SLP_PER_100K_POP | SLP stations per 100,000 population | Continuous | RQ4 target construction |
 | HIGH_SLP | 1 if SLP_PER_100K_POP > 1,618 (75th percentile) | Binary | RQ4 target |
 | PRIVATE_5G_LIC | SLP presence flag (97.8% = 1; saturated) | Binary | Descriptive only |
 | LOG1P_* | log1p transformations of the skewed continuous variables above | Continuous | Modeling/visualization |
-
-Excluded from the active design (absent from the merged dataset; future extensions): `DROP_RATE` (Anatel RQUAL) and `SATISFACTION` (Anatel satisfaction survey ISG).

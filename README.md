@@ -12,19 +12,19 @@
 
 This repository supports a data analytics capstone project evaluating the municipal-level state of cloud-native telecommunications transformation in Brazil. It uses open public data from the Brazilian National Telecommunications Agency (Anatel) and the Brazilian Institute of Geography and Statistics (IBGE) to analyze where 5G NR/SA rollout, fiber intensity, digital readiness, and private-network/SLP adoption are concentrated across all 5,571 municipalities.
 
-Two questions from the original synopsis — a network-generation QoS comparison and a customer-satisfaction prediction — were removed at the interim stage because the merged municipal dataset does not include `DROP_RATE` or `SATISFACTION`; they remain documented future extensions.
-
 ## Abstract
 
-**Problem.** Brazil's migration toward cloud-native, 5G Standalone (SA) network architecture is highly unequal across its 5,571 municipalities, and it is poorly understood which municipal characteristics genuinely distinguish where that infrastructure lands, leaving carriers and the regulator without an evidence base for allocating capital and monitoring the coverage obligations attached to the 2021 spectrum auction.
+**Problem.** Brazil's move to cloud-native, 5G Standalone (SA) networks is spreading unevenly across its 5,571 municipalities, and no study has measured which municipal characteristics actually explain where this infrastructure lands. Carriers and the regulator therefore allocate capital and monitor the coverage obligations of the 2021 spectrum auction without a municipal evidence base.
 
-**Solution approach.** Classical inferential statistics (one-way ANOVA, chi-square test of independence, likelihood-ratio test) combined with machine learning (cross-validated random forest, ridge regression, k-means with bootstrap stability analysis, balanced logistic regression) under a leakage-free specification protocol that restricts predictors to structurally exogenous variables; all supervised models evaluated on stratified 75/25 held-out partitions with 5-fold cross-validated tuning and a fixed seed (42).
+**Solution approach.** The study asks four questions — can a municipality's rollout status be predicted, what explains deployment intensity, how do municipalities group by digital readiness, and what drives private-network adoption — and answers each with a matching method: a random forest classifier, ridge regression, k-means clustering with a chi-square test, and logistic regression, all evaluated on held-out data. Predictors are restricted to structural characteristics so that the models cannot simply restate the outcome they are asked to predict.
 
-**Data.** Open administrative records from Anatel (mobile accesses, licensed stations, private-network/SLP registry, fiber accesses, measured download speeds) merged with IBGE socioeconomic aggregates at the municipal grain; 10,107 supplied records cleaned to the full national frame of N = 5,571 municipalities.
+**Data.** Open administrative records from Anatel (mobile accesses, licensed stations, private-network registry, fiber accesses, measured download speeds) merged with IBGE socioeconomic data for all 5,571 municipalities, so the analysis covers the whole country rather than a sample.
 
-**Major results.** RQ1 random forest, leakage-free: accuracy = .915, F1 = .808, ROC-AUC = .927 (naive specification .965). RQ2 ridge: R² = .02 (raw) to .11 (NR-present municipalities). RQ3: two readiness clusters, bootstrap ARI = .99, associated with macro-region, χ²(4) = 254.1, p < .001. RQ4 logistic: ROC-AUC = .810, recall = .753; GDP per capita and population are the strongest drivers.
+**Technology.** Python (pandas, scikit-learn, statsmodels) on ordinary CPU hardware; a single-command pipeline and a Google Colab notebook regenerate every result from a checksum-verified input.
 
-**Implementation area.** Reproducible municipal scores (rollout probability, readiness cluster, SLP-intensity probability) keyed to the IBGE code, usable as a coverage-obligation watchlist by Anatel and as an investment-prioritization signal by Claro, Vivo, and TIM.
+**Major results.** Whether a municipality is a high-density rollout site is predicted well from structural characteristics alone (ROC-AUC = .927 against a 22.5% baseline), with population size the dominant factor. How intensively municipalities are deployed per capita, by contrast, is largely not explained by those same characteristics. Municipalities separate into two stable readiness groups that follow Brazil's macro-regions, and high private-network intensity concentrates in richer, larger municipalities. Together, these findings separate where cloud-native infrastructure appears from how much of it is deployed.
+
+**Implementation area.** Municipal scores keyed to the IBGE code, usable by Anatel as a coverage-obligation watchlist and by Claro, Vivo, and TIM to prioritize private-network and edge investments.
 
 ## Research Questions
 
