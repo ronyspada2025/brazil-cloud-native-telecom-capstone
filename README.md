@@ -59,6 +59,12 @@ It regenerates every number, table, and figure of the final report from the comm
 
 `notebooks/06_final_report_pipeline_colab.ipynb` runs the identical pipeline in Google Colab (~3 minutes), prints a headline-results check against the final report, and packages all outputs for download.
 
+## Data Provenance and Reproducibility Scope
+
+Every column of the merged dataset is traced to its IBGE/Anatel source in `docs/DATA_PROVENANCE.md` (Table 3 of the final report), and `reports/figures/figure00b_source_merge.png` shows the merge design. The committed analysis input has SHA-256 `50fac84b16f63d66628741f36686cc076f43c90632a3befe53ca43ed9b316207`; `final_pipeline.py` recomputes and records it in `headline_results.json`, and `python src/data_loader.py --check` verifies the file's columns and checksum.
+
+Reproducibility is exact from the committed merged dataset onward. From the public sources onward it is documented at the dataset level (source, access point, variables, aggregation), not the file level: the specific extract files and download snapshots were not archived at acquisition time. This is stated as a limitation in the final report; re-acquiring and archiving the raw extracts under `data/raw/` is the documented next step. `docs/DATA_PROVENANCE.md` also records each source's reference period or publication cadence (Census 2022; population estimates 2024 vintage; municipal GDP annual with a two-year lag; Anatel accesses monthly; station and SLP registries continuous), so a later rebuild can select the matching vintage where it is known.
+
 ## Repository Structure
 
 ```text
@@ -73,7 +79,8 @@ It regenerates every number, table, and figure of the final report from the comm
 │   └── processed/
 │       └── merged_municipal_dataset.csv   (committed analysis input, 1.8 MB)
 ├── docs/
-│   └── DATA_DICTIONARY.md
+│   ├── DATA_DICTIONARY.md
+│   └── DATA_PROVENANCE.md      (Table 3: source-to-variable lineage)
 ├── notebooks/
 │   ├── 01_data_cleaning_and_alignment.ipynb   (scaffold: original acquisition design)
 │   ├── 02_feature_engineering.ipynb
@@ -82,7 +89,7 @@ It regenerates every number, table, and figure of the final report from the comm
 │   ├── 05_ml_pipelines_rq1_rq3_rq5_rq6.ipynb
 │   └── 06_final_report_pipeline_colab.ipynb   (Colab mirror of final_pipeline.py)
 ├── reports/
-│   ├── figures/                 (Figures 1–9 of the final report)
+│   ├── figures/                 (Figures 1–10 of the final report)
 │   └── tables/                  (result tables + headline_results.json)
 └── src/
     ├── __init__.py
@@ -96,7 +103,7 @@ The five scaffold notebooks document the original seven-extract acquisition desi
 
 ## Data Notes
 
-- The supplied merged dataset contains 10,107 rows × 25 columns with exactly 5,571 unique municipalities; `final_pipeline.py` drops 193 exact duplicates, collapses 4,343 duplicate municipality keys (first non-null for stable variables; sum for `SLP_STATION_CNT`; max for `PRIVATE_5G_LIC`), and restores the one-row-per-municipality frame (5,571 × 42 after feature engineering).
+- The supplied merged dataset contains 10,107 rows × 25 columns with exactly 5,571 unique municipalities; `final_pipeline.py` drops 193 exact duplicates, collapses 4,343 duplicate municipality keys (first non-null for stable variables; sum for `SLP_STATION_CNT`; max for `PRIVATE_5G_LIC`), and restores the one-row-per-municipality frame (5,571 × 42 after feature engineering). The duplicate keys have a single origin: 4,343 municipalities appear exactly twice and, within each pair, only `SLP_STATION_CNT` differs — the signature of a one-to-many join with Anatel's SLP registry, which carries more than one record per municipality. Summing `SLP_STATION_CNT` reconstructs the municipal total (e.g., IBGE 1100015: 77 + 31 = 108); keeping only the first record would have discarded 4,343 partial counts.
 - The binary fiber flag is saturated (100% of non-missing values equal 1); `FIBER_PER_100` is the substantive fiber-readiness measure.
 - `NR_ACCESS_PER_100` and `AVG_DL_SPEED` are excluded from the RQ1/RQ2 predictor sets as near-target (leakage) variables.
 - Raw Anatel/IBGE extracts are excluded from version control because of their size; acquisition is documented in `src/data_loader.py` (Wayback snapshots, data-panel extraction, and file-server metadata parsing). Source landing pages were verified July 23, 2026; raw extracts acquired August 2026.
