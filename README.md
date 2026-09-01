@@ -14,6 +14,18 @@ This repository supports a data analytics capstone project evaluating the munici
 
 Two questions from the original synopsis — a network-generation QoS comparison and a customer-satisfaction prediction — were removed at the interim stage because the merged municipal dataset does not include `DROP_RATE` or `SATISFACTION`; they remain documented future extensions.
 
+## Abstract
+
+**Problem.** Brazil's migration toward cloud-native, 5G Standalone (SA) network architecture is highly unequal across its 5,571 municipalities, and it is poorly understood which municipal characteristics genuinely distinguish where that infrastructure lands, leaving carriers and the regulator without an evidence base for allocating capital and monitoring the coverage obligations attached to the 2021 spectrum auction.
+
+**Solution approach.** Classical inferential statistics (one-way ANOVA, chi-square test of independence, likelihood-ratio test) combined with machine learning (cross-validated random forest, ridge regression, k-means with bootstrap stability analysis, balanced logistic regression) under a leakage-free specification protocol that restricts predictors to structurally exogenous variables; all supervised models evaluated on stratified 75/25 held-out partitions with 5-fold cross-validated tuning and a fixed seed (42).
+
+**Data.** Open administrative records from Anatel (mobile accesses, licensed stations, private-network/SLP registry, fiber accesses, measured download speeds) merged with IBGE socioeconomic aggregates at the municipal grain; 10,107 supplied records cleaned to the full national frame of N = 5,571 municipalities.
+
+**Major results.** RQ1 random forest, leakage-free: accuracy = .915, F1 = .808, ROC-AUC = .927 (naive specification .965). RQ2 ridge: R² = .02 (raw) to .11 (NR-present municipalities). RQ3: two readiness clusters, bootstrap ARI = .99, associated with macro-region, χ²(4) = 254.1, p < .001. RQ4 logistic: ROC-AUC = .810, recall = .753; GDP per capita and population are the strongest drivers.
+
+**Implementation area.** Reproducible municipal scores (rollout probability, readiness cluster, SLP-intensity probability) keyed to the IBGE code, usable as a coverage-obligation watchlist by Anatel and as an investment-prioritization signal by Claro, Vivo, and TIM.
+
 ## Research Questions
 
 - **RQ1 — Rollout classification.** Can exogenous socioeconomic and infrastructure characteristics predict whether a municipality is a high-density 5G NR/SA rollout site?
@@ -28,7 +40,7 @@ Two questions from the original synopsis — a network-generation QoS comparison
 | RQ1 | Random forest (leakage-free, tuned) | Accuracy .915, F1 .808, ROC-AUC .927 (naive spec: .965) |
 | RQ2 | RidgeCV | R² .02 (raw), .06 (log1p), .11 (NR-present conditional) |
 | RQ3 | K-means (k = 2) + chi-square | Silhouette .305, bootstrap ARI .99, χ²(4) = 254.1, p < .001 |
-| RQ4 | Balanced logistic regression | ROC-AUC .810, recall .747, LLR p < .001 |
+| RQ4 | Balanced logistic regression | ROC-AUC .810, recall .753, LLR p < .001 |
 
 ## Reproduction
 
@@ -40,6 +52,8 @@ python final_pipeline.py
 ```
 
 `requirements.txt` pins `scikit-learn==1.8.0`, the version used for the reported random-forest results (tree construction changed in 1.9; every other result is version-stable). Use `python3` on macOS/Linux if `python` is not on your PATH.
+
+**Cross-platform note.** On Linux x86-64 (the environment used for the final report, and the one Google Colab provides) every value regenerates exactly. On Apple Silicon macOS (Python 3.13, scikit-learn 1.8.0) all cleaning, regression, clustering, chi-square, and logistic results are identical, while random-forest metrics shift by at most ±.001 (e.g., F1 .809 vs. .808; naive ROC-AUC .966 vs. .965) because floating-point summation order differs across processor architectures; no conclusion changes. The committed `reports/` outputs were generated on Apple Silicon.
 
 It regenerates every number, table, and figure of the final report from the committed analysis input (`data/processed/merged_municipal_dataset.csv`) with a fixed seed (42), writing outputs to `reports/figures` and `reports/tables` (including a machine-readable `headline_results.json`).
 
