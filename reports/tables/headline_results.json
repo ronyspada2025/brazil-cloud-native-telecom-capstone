@@ -1,4 +1,5 @@
 {
+  "input_sha256": "50fac84b16f63d66628741f36686cc076f43c90632a3befe53ca43ed9b316207",
   "raw_shape": [
     10107,
     25
@@ -19,38 +20,38 @@
   "corr_speed_nr": 0.6110935300400808,
   "corr_speed_density": 0.3639549530394879,
   "stage_counts": {
-    "High-density NR/SA (> P75)": 1251,
+    "High-count NR (> P75)": 1251,
     "NR present below P75": 941,
     "No NR station": 3379
   },
   "stage_table": {
     "n": {
-      "High-density NR/SA (> P75)": 1251,
+      "High-count NR (> P75)": 1251,
       "NR present below P75": 941,
       "No NR station": 3379
     },
     "mean_speed": {
-      "High-density NR/SA (> P75)": 60.69,
+      "High-count NR (> P75)": 60.69,
       "NR present below P75": 41.01,
       "No NR station": 38.35
     },
     "median_speed": {
-      "High-density NR/SA (> P75)": 55.63,
+      "High-count NR (> P75)": 55.63,
       "NR present below P75": 39.08,
       "No NR station": 36.6
     },
     "sd_speed": {
-      "High-density NR/SA (> P75)": 26.65,
+      "High-count NR (> P75)": 26.65,
       "NR present below P75": 15.58,
       "No NR station": 14.94
     },
     "median_fiber": {
-      "High-density NR/SA (> P75)": 140.44,
+      "High-count NR (> P75)": 140.44,
       "NR present below P75": 91.1,
       "No NR station": 70.15
     },
     "median_sa": {
-      "High-density NR/SA (> P75)": 84.62,
+      "High-count NR (> P75)": 84.62,
       "NR present below P75": 34.88,
       "No NR station": 0.0
     }
@@ -286,5 +287,139 @@
       "REGION_Southeast": 0.0650948821647622
     },
     "llr_p": 7.655704554205875e-258
+  },
+  "revision": {
+    "rq1_per_capita_p75": {
+      "threshold_per_100k": 46.357283735111146,
+      "positive_share": 0.25,
+      "accuracy": 0.8123652048885693,
+      "f1": 0.5876777251184834,
+      "roc_auc": 0.8175907252509891,
+      "importances": {
+        "GDP_PER_CAP": 0.12349100622956255,
+        "POP_2024": 0.3403602529254175,
+        "POP_DENSITY": 0.2098556305269855,
+        "FIBER_PER_100": 0.15000105855285215,
+        "LTE_ACCESS_PER_100": 0.10013910219991846,
+        "REGION_North": 0.006343912852478854,
+        "REGION_Northeast": 0.024505277206958474,
+        "REGION_South": 0.028183128131571714,
+        "REGION_Southeast": 0.01712063137425474
+      }
+    },
+    "rq1_cv_random_vs_state": {
+      "random_stratified": {
+        "f1": {
+          "mean": 0.7733420304611599,
+          "sd": 0.014100620079394003
+        },
+        "roc_auc": {
+          "mean": 0.9185343703933462,
+          "sd": 0.0028628569093388013
+        }
+      },
+      "grouped_by_state": {
+        "f1": {
+          "mean": 0.7663174636646466,
+          "sd": 0.04660179437966057
+        },
+        "roc_auc": {
+          "mean": 0.9085530449522123,
+          "sd": 0.02252075823888857
+        }
+      }
+    },
+    "rq4_cv_random_vs_state": {
+      "random_stratified": {
+        "f1": {
+          "mean": 0.5561285505180041,
+          "sd": 0.016756312236672385
+        },
+        "roc_auc": {
+          "mean": 0.7988660206752045,
+          "sd": 0.01662537434386521
+        }
+      },
+      "grouped_by_state": {
+        "f1": {
+          "mean": 0.46614133446344963,
+          "sd": 0.15209853870020704
+        },
+        "roc_auc": {
+          "mean": 0.7582899547089013,
+          "sd": 0.06731699989304737
+        }
+      }
+    },
+    "n_states": 27,
+    "rq2_part1_presence": {
+      "presence_share": 0.393961179007908,
+      "roc_auc": 0.8491982059208077,
+      "recall": 0.6897810218978102,
+      "accuracy": 0.7958303378864127
+    },
+    "rq2_negbin_exposure": {
+      "converged": true,
+      "pseudo_r2_mcfadden": 0.017345148731589988,
+      "alpha": 4.423010675322208,
+      "llr_p": 5.368668774798122e-93,
+      "coefficients": {
+        "GDP_PER_CAP": {
+          "coef": 0.1683882410625302,
+          "ci_low": 0.08735103604378787,
+          "ci_high": 0.24942544608127254,
+          "p": 4.648441205436773e-05
+        },
+        "POP_2024": {
+          "coef": 0.5735925873764798,
+          "ci_low": 0.38590969452298596,
+          "ci_high": 0.7612754802299736,
+          "p": 2.098390792307258e-09
+        },
+        "POP_DENSITY": {
+          "coef": 0.08504169673887547,
+          "ci_low": 0.0010149471010534872,
+          "ci_high": 0.16906844637669746,
+          "p": 0.04729619760469707
+        },
+        "FIBER_PER_100": {
+          "coef": 0.3601688319095619,
+          "ci_low": 0.2887288840207765,
+          "ci_high": 0.4316087797983473,
+          "p": 5.0189015822933654e-23
+        },
+        "LTE_ACCESS_PER_100": {
+          "coef": -0.06438868241152773,
+          "ci_low": -0.11640277418090364,
+          "ci_high": -0.01237459064215183,
+          "p": 0.015255507867868029
+        },
+        "REGION_North": {
+          "coef": -0.028597942420567114,
+          "ci_low": -0.10899654835261804,
+          "ci_high": 0.051800663511483824,
+          "p": 0.4857007611756332
+        },
+        "REGION_Northeast": {
+          "coef": 0.22692676094203154,
+          "ci_low": 0.11639337372277414,
+          "ci_high": 0.33746014816128894,
+          "p": 5.725767378934642e-05
+        },
+        "REGION_South": {
+          "coef": 0.3414879757332978,
+          "ci_low": 0.2401932512095468,
+          "ci_high": 0.4427827002570488,
+          "p": 3.9088395388073667e-11
+        },
+        "REGION_Southeast": {
+          "coef": -0.03791273021727068,
+          "ci_low": -0.14727294922974193,
+          "ci_high": 0.07144748879520059,
+          "p": 0.49683664758441615
+        }
+      }
+    },
+    "rq3_cramers_v": 0.21370023778566619
   }
 }

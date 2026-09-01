@@ -1,7 +1,7 @@
 """QM640 Data Analytics Capstone - Final Report Pipeline.
 
 The State of Cloud-Native Transformation on Telecommunications Networks in
-Brazil: A Municipal-Level Machine Learning Analysis of 5G NR/SA Rollout,
+Brazil: A Municipal-Level Machine Learning Analysis of Licensed 5G NR Rollout,
 Digital Readiness, and Private-Network Adoption.
 
 Author: Rony Anderson Spada Pedroso (Walsh College, QM640)
@@ -14,6 +14,7 @@ Outputs are written to ``reports/figures`` and ``reports/tables``.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import warnings
@@ -57,7 +58,7 @@ RENAME_MAP = {
     "V614_densidade demografic": "POP_DENSITY",
     "V6318_area da unidade terr": "AREA_KM2",
     "V93_populacao residente": "POP_CENSUS_2022",
-    "ERB_NR": "TECH_5G_SA_CNT",
+    "ERB_NR": "NR_STATION_CNT",
 }
 
 EXOG_NUM = ["GDP_PER_CAP", "POP_2024", "POP_DENSITY", "FIBER_PER_100", "LTE_ACCESS_PER_100"]
@@ -74,8 +75,19 @@ CLUSTER_FEATURES = [
 RESULTS: dict = {}
 
 
+def input_sha256() -> str:
+    """SHA-256 of the committed analysis input, so any reproduction can confirm it uses the identical file."""
+    h = hashlib.sha256()
+    with open(DATA_PATH, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def load_and_clean() -> pd.DataFrame:
     """Load the supplied merged dataset and restore one row per municipality."""
+    RESULTS["input_sha256"] = input_sha256()
+    print(f"Input SHA-256: {RESULTS['input_sha256']}")
     raw = pd.read_csv(DATA_PATH, dtype={"MUNICIP_ID": str})
     RESULTS["raw_shape"] = list(raw.shape)
     RESULTS["raw_unique_municipalities"] = int(raw["MUNICIP_ID"].nunique())
@@ -111,8 +123,8 @@ def load_and_clean() -> pd.DataFrame:
     df["FIBER_PER_100"] = 100.0 * df["FIBER_ACCESSES"] / df["POP_2024"]
     df["LTE_ACCESS_PER_100"] = 100.0 * df["ACC_LTE"] / df["POP_2024"]
     df["NR_ACCESS_PER_100"] = 100.0 * df["ACC_NR"] / df["POP_2024"]
-    df["SA_ERB_PER_100K_POP"] = 100_000.0 * df["TECH_5G_SA_CNT"] / df["POP_2024"]
-    df["SA_ERB_PER_1000_KM2"] = 1_000.0 * df["TECH_5G_SA_CNT"] / df["AREA_KM2"]
+    df["NR_PER_100K_POP"] = 100_000.0 * df["NR_STATION_CNT"] / df["POP_2024"]
+    df["NR_PER_1000_KM2"] = 1_000.0 * df["NR_STATION_CNT"] / df["AREA_KM2"]
     df["SLP_PER_100K_POP"] = 100_000.0 * df["SLP_STATION_CNT"] / df["POP_2024"]
     for col in [
         "POP_2024",
@@ -121,8 +133,8 @@ def load_and_clean() -> pd.DataFrame:
         "FIBER_PER_100",
         "LTE_ACCESS_PER_100",
         "NR_ACCESS_PER_100",
-        "TECH_5G_SA_CNT",
-        "SA_ERB_PER_100K_POP",
+        "NR_STATION_CNT",
+        "NR_PER_100K_POP",
         "SLP_PER_100K_POP",
         "AVG_DL_SPEED",
     ]:
@@ -130,13 +142,13 @@ def load_and_clean() -> pd.DataFrame:
     RESULTS["clean_columns"] = int(df.shape[1])
 
     # 5) Targets.
-    sa = df["TECH_5G_SA_CNT"]
+    sa = df["NR_STATION_CNT"]
     RESULTS["sa_p70"] = float(sa.quantile(0.70))
     RESULTS["sa_p75"] = float(sa.quantile(0.75))
     RESULTS["sa_p80"] = float(sa.quantile(0.80))
-    df["HIGH_SA_P70"] = (sa > sa.quantile(0.70)).astype(int)
-    df["HIGH_SA_P75"] = (sa > sa.quantile(0.75)).astype(int)
-    df["HIGH_SA_P80"] = (sa > sa.quantile(0.80)).astype(int)
+    df["HIGH_NR_P70"] = (sa > sa.quantile(0.70)).astype(int)
+    df["HIGH_NR_P75"] = (sa > sa.quantile(0.75)).astype(int)
+    df["HIGH_NR_P80"] = (sa > sa.quantile(0.80)).astype(int)
     slp_p75 = df["SLP_PER_100K_POP"].quantile(0.75)
     RESULTS["slp_p75"] = float(slp_p75)
     df["HIGH_SLP"] = (df["SLP_PER_100K_POP"] > slp_p75).astype(int)
@@ -166,8 +178,8 @@ def descriptives(df: pd.DataFrame) -> None:
         "FIBER_PER_100",
         "LTE_ACCESS_PER_100",
         "NR_ACCESS_PER_100",
-        "TECH_5G_SA_CNT",
-        "SA_ERB_PER_100K_POP",
+        "NR_STATION_CNT",
+        "NR_PER_100K_POP",
         "AVG_DL_SPEED",
         "SLP_PER_100K_POP",
     ]
@@ -193,7 +205,7 @@ def descriptives(df: pd.DataFrame) -> None:
     fig, axes = plt.subplots(2, 3, figsize=(11, 6))
     for ax, col in zip(
         axes.ravel(),
-        ["GDP_PER_CAP", "POP_DENSITY", "FIBER_PER_100", "TECH_5G_SA_CNT", "AVG_DL_SPEED", "SA_ERB_PER_100K_POP"],
+        ["GDP_PER_CAP", "POP_DENSITY", "FIBER_PER_100", "NR_STATION_CNT", "AVG_DL_SPEED", "NR_PER_100K_POP"],
     ):
         ax.hist(df[col].dropna(), bins=50, color="#1f77b4")
         ax.set_title(col, fontsize=9)
@@ -204,7 +216,7 @@ def descriptives(df: pd.DataFrame) -> None:
     plt.close(fig)
 
     fig, axes = plt.subplots(2, 3, figsize=(11, 5.5))
-    for j, col in enumerate(["POP_2024", "GDP_PER_CAP", "TECH_5G_SA_CNT"]):
+    for j, col in enumerate(["POP_2024", "GDP_PER_CAP", "NR_STATION_CNT"]):
         axes[0, j].hist(df[col].dropna(), bins=50, color="#1f77b4")
         axes[0, j].set_title(f"{col} (raw)", fontsize=9)
         axes[1, j].hist(np.log1p(df[col].dropna()), bins=50, color="#ff7f0e")
@@ -221,8 +233,8 @@ def descriptives(df: pd.DataFrame) -> None:
         "FIBER_PER_100",
         "LTE_ACCESS_PER_100",
         "NR_ACCESS_PER_100",
-        "TECH_5G_SA_CNT",
-        "SA_ERB_PER_100K_POP",
+        "NR_STATION_CNT",
+        "NR_PER_100K_POP",
         "AVG_DL_SPEED",
         "SLP_PER_100K_POP",
     ]
@@ -250,11 +262,11 @@ def rollout_stage_analysis(df: pd.DataFrame) -> None:
     """Download speed by rollout stage (Table 8, Figure 5) and regional EDA."""
     import matplotlib.pyplot as plt
 
-    p75 = df["TECH_5G_SA_CNT"].quantile(0.75)
+    p75 = df["NR_STATION_CNT"].quantile(0.75)
     stage = np.where(
-        df["TECH_5G_SA_CNT"] > p75,
-        "High-density NR/SA (> P75)",
-        np.where(df["TECH_5G_SA_CNT"] > 0, "NR present below P75", "No NR station"),
+        df["NR_STATION_CNT"] > p75,
+        "High-count NR (> P75)",
+        np.where(df["NR_STATION_CNT"] > 0, "NR present below P75", "No NR station"),
     )
     df = df.assign(ROLLOUT_STAGE=stage)
     tab = (
@@ -265,7 +277,7 @@ def rollout_stage_analysis(df: pd.DataFrame) -> None:
             median_speed=("AVG_DL_SPEED", "median"),
             sd_speed=("AVG_DL_SPEED", "std"),
             median_fiber=("FIBER_PER_100", "median"),
-            median_sa=("SA_ERB_PER_100K_POP", "median"),
+            median_sa=("NR_PER_100K_POP", "median"),
         )
         .round(2)
     )
@@ -278,7 +290,7 @@ def rollout_stage_analysis(df: pd.DataFrame) -> None:
     RESULTS["anova_f"] = float(f_stat)
     RESULTS["anova_p"] = float(p_val)
 
-    order = ["No NR station", "NR present below P75", "High-density NR/SA (> P75)"]
+    order = ["No NR station", "NR present below P75", "High-count NR (> P75)"]
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
     ax.boxplot(
         [df.loc[df["ROLLOUT_STAGE"] == s, "AVG_DL_SPEED"].dropna() for s in order],
@@ -289,13 +301,13 @@ def rollout_stage_analysis(df: pd.DataFrame) -> None:
     ax.set_xticks(range(1, len(order) + 1))
     ax.set_xticklabels(order)
     ax.set_ylabel("Average download speed (Mbps)")
-    ax.set_title("Download speed by NR/SA rollout stage")
+    ax.set_title("Download speed by licensed NR rollout stage")
     fig.tight_layout()
     fig.savefig(os.path.join(FIG_DIR, "figure05_speed_by_stage.png"), dpi=200)
     plt.close(fig)
 
     reg = (
-        df.assign(with_nr=(df["TECH_5G_SA_CNT"] > 0).astype(float))
+        df.assign(with_nr=(df["NR_STATION_CNT"] > 0).astype(float))
         .groupby("REGION")["with_nr"]
         .agg(["count", "mean"])
     )
@@ -308,19 +320,19 @@ def rollout_stage_analysis(df: pd.DataFrame) -> None:
     ax.bar(reg_sorted.index, reg_sorted["share_pct"], color="#1f77b4")
     for i, v in enumerate(reg_sorted["share_pct"]):
         ax.text(i, v + 0.5, f"{v:.1f}%", ha="center", fontsize=9)
-    ax.set_ylabel("Municipalities with any NR/SA deployment (%)")
-    ax.set_title("Share of municipalities with any 5G NR/SA deployment by region")
+    ax.set_ylabel("Municipalities with any licensed NR station (%)")
+    ax.set_title("Share of municipalities with any licensed 5G NR station by region")
     fig.tight_layout()
     fig.savefig(os.path.join(FIG_DIR, "figure06_region_share.png"), dpi=200)
     plt.close(fig)
 
-    sub = df[df["TECH_5G_SA_CNT"] > 0]
+    sub = df[df["NR_STATION_CNT"] > 0]
     fig, ax = plt.subplots(figsize=(7.5, 5.2))
-    ax.scatter(sub["FIBER_PER_100"], sub["SA_ERB_PER_100K_POP"], s=6, alpha=0.4)
+    ax.scatter(sub["FIBER_PER_100"], sub["NR_PER_100K_POP"], s=6, alpha=0.4)
     ax.set_yscale("log")
     ax.set_xlabel("Fiber accesses per 100 inhabitants")
-    ax.set_ylabel("NR/SA ERBs per 100,000 population (log scale)")
-    ax.set_title("Fiber intensity versus NR/SA station density (NR-present municipalities)")
+    ax.set_ylabel("Licensed NR stations per 100,000 population (log scale)")
+    ax.set_title("Fiber intensity versus NR station intensity (NR-present municipalities)")
     fig.tight_layout()
     fig.savefig(os.path.join(FIG_DIR, "figure07_fiber_vs_sa.png"), dpi=200)
     plt.close(fig)
@@ -332,12 +344,12 @@ def model_frame(df: pd.DataFrame) -> pd.DataFrame:
         + EXOG_NUM
         + LEAKY
         + [
-            "TECH_5G_SA_CNT",
-            "SA_ERB_PER_100K_POP",
+            "NR_STATION_CNT",
+            "NR_PER_100K_POP",
             "SLP_PER_100K_POP",
-            "HIGH_SA_P70",
-            "HIGH_SA_P75",
-            "HIGH_SA_P80",
+            "HIGH_NR_P70",
+            "HIGH_NR_P75",
+            "HIGH_NR_P80",
             "HIGH_SLP",
         ]
     )
@@ -395,10 +407,10 @@ def rq1_classification(frame: pd.DataFrame) -> None:
             ),
         }
 
-    RESULTS["rq1_leakage_free_p75"] = run_rf(exog, "HIGH_SA_P75", tune=True)
-    RESULTS["rq1_naive_p75"] = run_rf(exog + LEAKY, "HIGH_SA_P75", tune=False)
-    RESULTS["rq1_leakage_free_p70"] = run_rf(exog, "HIGH_SA_P70", tune=False)
-    RESULTS["rq1_leakage_free_p80"] = run_rf(exog, "HIGH_SA_P80", tune=False)
+    RESULTS["rq1_leakage_free_p75"] = run_rf(exog, "HIGH_NR_P75", tune=True)
+    RESULTS["rq1_naive_p75"] = run_rf(exog + LEAKY, "HIGH_NR_P75", tune=False)
+    RESULTS["rq1_leakage_free_p70"] = run_rf(exog, "HIGH_NR_P70", tune=False)
+    RESULTS["rq1_leakage_free_p80"] = run_rf(exog, "HIGH_NR_P80", tune=False)
 
     import matplotlib.pyplot as plt
 
@@ -435,13 +447,13 @@ def rq2_ridge(frame: pd.DataFrame) -> None:
             ),
         }
 
-    RESULTS["rq2_raw"] = run_ridge(exog, frame["SA_ERB_PER_100K_POP"], frame)
-    RESULTS["rq2_log"] = run_ridge(exog, np.log1p(frame["SA_ERB_PER_100K_POP"]), frame)
-    RESULTS["rq2_naive_raw"] = run_ridge(exog + LEAKY, frame["SA_ERB_PER_100K_POP"], frame)
-    nr_present = frame[frame["TECH_5G_SA_CNT"] > 0]
+    RESULTS["rq2_raw"] = run_ridge(exog, frame["NR_PER_100K_POP"], frame)
+    RESULTS["rq2_log"] = run_ridge(exog, np.log1p(frame["NR_PER_100K_POP"]), frame)
+    RESULTS["rq2_naive_raw"] = run_ridge(exog + LEAKY, frame["NR_PER_100K_POP"], frame)
+    nr_present = frame[frame["NR_STATION_CNT"] > 0]
     RESULTS["rq2_nr_present_n"] = int(len(nr_present))
     RESULTS["rq2_conditional_log"] = run_ridge(
-        exog, np.log1p(nr_present["SA_ERB_PER_100K_POP"]), nr_present
+        exog, np.log1p(nr_present["NR_PER_100K_POP"]), nr_present
     )
 
 
@@ -513,6 +525,94 @@ def rq4_logistic(frame: pd.DataFrame) -> None:
     RESULTS["rq4"]["llr_p"] = float(fit.llr_pvalue)
 
 
+def revision_robustness(df: pd.DataFrame, frame: pd.DataFrame) -> None:
+    """Analyses added in the revised final report (final_revised_V1):
+    (a) RQ1 exposure-adjusted target (NR stations per 100,000 population > P75);
+    (b) state-grouped cross-validation (GroupKFold by UF) for RQ1 and RQ4 versus random stratified CV;
+    (c) RQ2 two-part model: presence logistic + negative-binomial count model with population exposure (95% CIs);
+    (d) Cramer's V for the RQ3 region x cluster association.
+    """
+    import statsmodels.api as sm
+    from sklearn.model_selection import GroupKFold, StratifiedKFold
+
+    region_dummies = [c for c in frame.columns if c.startswith("REGION_")]
+    exog = EXOG_NUM + region_dummies
+    x = frame[exog].astype(float)
+    groups = frame["MUNICIP_ID"].str[:2]          # state (UF) code = first two IBGE digits
+    RESULTS["revision"] = {}
+    rev = RESULTS["revision"]
+    rf_cfg = dict(n_estimators=300, max_depth=8, min_samples_leaf=1, random_state=SEED, class_weight="balanced")
+
+    # (a) exposure-adjusted RQ1 target
+    dens = frame["NR_PER_100K_POP"]
+    thr = float(dens.quantile(0.75))
+    y_dens = (dens > thr).astype(int)
+    x_tr, x_te, y_tr, y_te = train_test_split(x, y_dens, test_size=0.25, stratify=y_dens, random_state=SEED)
+    m = RandomForestClassifier(**rf_cfg).fit(x_tr, y_tr)
+    pred, proba = m.predict(x_te), m.predict_proba(x_te)[:, 1]
+    rev["rq1_per_capita_p75"] = {
+        "threshold_per_100k": thr, "positive_share": float(y_dens.mean()),
+        "accuracy": float(accuracy_score(y_te, pred)), "f1": float(f1_score(y_te, pred)),
+        "roc_auc": float(roc_auc_score(y_te, proba)),
+        "importances": dict(zip(exog, [float(v) for v in m.feature_importances_])),
+    }
+
+    # (b) grouped-by-state vs random CV on the full modeling frame
+    def cv_compare(model_factory, y, scoring_fn):
+        out = {}
+        for name, splitter in [("random_stratified", StratifiedKFold(5, shuffle=True, random_state=SEED)),
+                               ("grouped_by_state", GroupKFold(5))]:
+            scores = {"f1": [], "roc_auc": []}
+            for tr, te in splitter.split(x, y, groups):
+                mdl = model_factory().fit(x.iloc[tr], y.iloc[tr])
+                scores["f1"].append(f1_score(y.iloc[te], mdl.predict(x.iloc[te])))
+                scores["roc_auc"].append(roc_auc_score(y.iloc[te], mdl.predict_proba(x.iloc[te])[:, 1]))
+            out[name] = {k: {"mean": float(np.mean(v)), "sd": float(np.std(v))} for k, v in scores.items()}
+        return out
+    rev["rq1_cv_random_vs_state"] = cv_compare(lambda: RandomForestClassifier(**rf_cfg), frame["HIGH_NR_P75"], None)
+    rev["rq4_cv_random_vs_state"] = cv_compare(
+        lambda: Pipeline([("scale", StandardScaler()),
+                          ("clf", LogisticRegression(class_weight="balanced", max_iter=2000, random_state=SEED))]),
+        frame["HIGH_SLP"], None)
+    rev["n_states"] = int(groups.nunique())
+
+    # (c) RQ2 two-part model
+    present = (frame["NR_STATION_CNT"] > 0).astype(int)
+    x_tr, x_te, y_tr, y_te = train_test_split(x, present, test_size=0.25, stratify=present, random_state=SEED)
+    pres = Pipeline([("scale", StandardScaler()),
+                     ("clf", LogisticRegression(class_weight="balanced", max_iter=2000, random_state=SEED))]).fit(x_tr, y_tr)
+    rev["rq2_part1_presence"] = {
+        "presence_share": float(present.mean()),
+        "roc_auc": float(roc_auc_score(y_te, pres.predict_proba(x_te)[:, 1])),
+        "recall": float(recall_score(y_te, pres.predict(x_te))),
+        "accuracy": float(accuracy_score(y_te, pres.predict(x_te))),
+    }
+    xs = pd.DataFrame(StandardScaler().fit_transform(x), columns=exog)
+    xs_c = sm.add_constant(xs)
+    try:
+        nb = sm.NegativeBinomial(frame["NR_STATION_CNT"].astype(float), xs_c,
+                                 exposure=frame["POP_2024"].astype(float)).fit(disp=0, maxiter=200)
+        ci = nb.conf_int()
+        rev["rq2_negbin_exposure"] = {
+            "converged": bool(nb.mle_retvals.get("converged", True)),
+            "pseudo_r2_mcfadden": float(nb.prsquared),
+            "alpha": float(nb.params.get("alpha", np.nan)),
+            "llr_p": float(nb.llr_pvalue),
+            "coefficients": {k: {"coef": float(nb.params[k]), "ci_low": float(ci.loc[k, 0]),
+                                 "ci_high": float(ci.loc[k, 1]), "p": float(nb.pvalues[k])}
+                             for k in exog},
+        }
+    except Exception as e:  # pragma: no cover
+        rev["rq2_negbin_exposure"] = {"error": str(e)}
+
+    # (d) Cramer's V for region x cluster
+    ct = pd.read_csv(os.path.join(TAB_DIR, "rq3_region_crosstab.csv"), index_col=0)
+    n = ct.values.sum()
+    k = min(ct.shape) - 1
+    rev["rq3_cramers_v"] = float(np.sqrt(RESULTS["rq3_chi2"] / (n * k))) if k > 0 else float("nan")
+
+
+
 def workflow_diagram():
     """Figure 1 of the final report: end-to-end workflow of the pipeline."""
     import matplotlib.pyplot as plt
@@ -541,20 +641,20 @@ def workflow_diagram():
          "One row per municipality", "(5,571 x 42)"])
     arrow(29, 51, 36, 51); arrow(64, 51, 71, 51)
     box(71, 24, 28, 14, "Feature engineering",
-        ["Per-capita intensities (FIBER_PER_100,", "LTE/NR_ACCESS_PER_100,", "SA_ERB_PER_100K_POP, SLP_PER_100K)",
-         "log1p transforms; REGION from code", "Targets: HIGH_SA_P75, HIGH_SLP"])
+        ["Per-capita intensities (FIBER_PER_100,", "LTE/NR_ACCESS_PER_100,", "NR_PER_100K_POP, SLP_PER_100K)",
+         "log1p transforms; REGION from code", "Targets: HIGH_NR_P75, HIGH_SLP"])
     box(36, 24, 28, 14, "EDA",
         ["Missingness profile (max 0.11%)", "Skew & zero-inflation diagnostics", "Correlation structure",
          "Speed by rollout stage (ANOVA)", "Regional deployment shares"])
     box(1, 24, 28, 14, "Leakage audit",
-        ["Exclude NR_ACCESS_PER_100 &", "AVG_DL_SPEED from RQ1/RQ2", "Exogenous set: GDP, population,",
+        ["Exclude NR_ACCESS_PER_100 &", "AVG_DL_SPEED from RQ1/RQ2", "Structural set: GDP, population,",
          "density, fiber & LTE intensity,", "region dummies"], fc="#fdeaea", ec="#a03a3a")
     arrow(85, 44, 85, 38); arrow(71, 31, 64, 31); arrow(36, 31, 29, 31)
     box(1, 3, 22.5, 15, "RQ1 Random forest",
-        ["High-density NR/SA class", "5-fold CV grid tuning", "Stratified 75/25, seed 42",
+        ["High-count NR class (+ per-capita", "robustness); 5-fold CV tuning", "Stratified 75/25 + state-grouped CV",
          "Acc/F1/ROC-AUC +", "P70/P75/P80 sensitivity"], **green)
     box(26.5, 3, 22.5, 15, "RQ2 Ridge regression",
-        ["SA_ERB_PER_100K_POP", "RidgeCV (5-fold, alpha grid)", "Raw, log1p, conditional",
+        ["NR_PER_100K_POP; two-part model", "RidgeCV + NB count model", "(population exposure, 95% CI)",
          "R-squared, MAE,", "standardized coefficients"], **green)
     box(52, 3, 22.5, 15, "RQ3 K-means + chi-square",
         ["k = 2-6 by silhouette", "20-resample bootstrap ARI", "Cluster profiles",
@@ -571,12 +671,70 @@ def workflow_diagram():
     plt.close(fig)
 
 
+def source_merge_diagram():
+    """Figure 2 of the final report: how the public sources form the merged dataset."""
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+
+    fig, ax = plt.subplots(figsize=(11, 7.2))
+    ax.set_xlim(0, 100); ax.set_ylim(0, 74); ax.axis("off")
+
+    def box(x, y, w, h, title, lines, fc, ec, tfs=8.8, lfs=7.0):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.3", fc=fc, ec=ec, lw=1.3))
+        ax.text(x + w / 2, y + h - 1.3, title, ha="center", va="top", fontsize=tfs, weight="bold", color="#123c6b")
+        ax.text(x + w / 2, y + h - 3.9, "\n".join(lines), ha="center", va="top", fontsize=lfs, color="#222222",
+                linespacing=1.25)
+
+    def arrow(x1, y1, x2, y2, color="#444444"):
+        ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2), arrowstyle="-|>", mutation_scale=11, lw=1.1, color=color))
+
+    ibge = dict(fc="#fdf1e3", ec="#b06a12")
+    anatel = dict(fc="#e8f0fe", ec="#1a56a0")
+    sources = [
+        ("IBGE Census 2022 (SIDRA)", ["V93, V6318, V614 -> POP_CENSUS_2022,", "AREA_KM2, POP_DENSITY"], ibge, "1 row / municipality"),
+        ("IBGE PIB dos Municipios + Estimativas", ["PIB_MIL_REAIS, POP_2024 -> GDP_PER_CAP"], ibge, "1 row / municipality"),
+        ("Anatel accesses (SMP)", ["ACC_CDMA_IS_95, ACC_GSM, ACC_LTE, ACC_NR,", "ACC_WCDMA (summed over providers)"], anatel, "1 row / municipality"),
+        ("Anatel licensed stations", ["ERB_CDMA, ERB_EDGE, ERB_GSM, ERB_LTE,", "ERB_NR, ERB_WCDMA (counted by technology)"], anatel, "1 row / municipality"),
+        ("Anatel SLP registry", ["SLP_STATION_CNT, PRIVATE_5G_LIC", "(more than one record per municipality)"], dict(fc="#fdeaea", ec="#a03a3a"), "2 rows for 4,343"),
+        ("Anatel Meu Municipio", ["FIBER_ACCESSES, FIBER_BACKHAUL"], anatel, "1 row / municipality"),
+        ("Anatel measured download speed", ["AVG_DL_SPEED (specific extract not recorded)"], anatel, "1 row / municipality"),
+    ]
+    n = len(sources); slot = 9.8; h = 8.0; top = 72
+    jx, jy, jw, jh = 51, 20, 22, 34
+    for i, (title, lines, style, grain) in enumerate(sources):
+        y = top - (i + 1) * slot + (slot - h)
+        box(1, y, 36, h, title, lines, **style)
+        ax.text(38.2, y + h / 2 + 1.2, grain, ha="left", va="center", fontsize=6.8, style="italic", color="#555555")
+        ty = jy + jh - 3 - i * (jh - 6) / (n - 1)
+        arrow(37.3, y + h / 2 - 1.0, jx - 0.4, ty, color="#8a8a8a")
+
+    box(jx, jy, jw, jh, "Join on MUNICIP_ID",
+        ["7-digit IBGE municipal code", "(string, zero-padded)", "", "Left join from the IBGE", "municipal frame (5,571)", "",
+         "SLP registry joins 1-to-many:", "4,343 municipalities receive", "two rows differing only in", "SLP_STATION_CNT"],
+        fc="#f4f4f4", ec="#666666", lfs=7.0)
+    arrow(jx + jw + 0.4, jy + jh / 2, 76.6, jy + jh / 2)
+    box(77, 40, 22, 14, "merged_municipal_dataset.csv",
+        ["10,107 rows x 25 columns", "5,571 unique municipalities", "committed analysis input", "SHA-256 recorded in headline_results.json"],
+        fc="#e9f7ec", ec="#1f7a33", lfs=6.8)
+    arrow(88, 39.6, 88, 34.6)
+    box(77, 20, 22, 14, "final_pipeline.py cleaning",
+        ["drop 193 exact duplicates", "sum SLP_STATION_CNT per key", "max PRIVATE_5G_LIC per key", "-> 5,571 x 42 (features added)"],
+        fc="#e9f7ec", ec="#1f7a33", lfs=6.8)
+    ax.text(50, 1.2, "Orange: IBGE sources. Blue: Anatel sources. Red: the one source that joins one-to-many. Grey: join step. "
+            "Green: committed artifacts. Italic labels give rows per municipality after aggregation.",
+            ha="center", fontsize=7.2, style="italic", color="#333333")
+    fig.tight_layout()
+    fig.savefig(os.path.join(FIG_DIR, "figure00b_source_merge.png"), dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> None:
     os.makedirs(FIG_DIR, exist_ok=True)
     os.makedirs(TAB_DIR, exist_ok=True)
     np.random.seed(SEED)
 
     workflow_diagram()
+    source_merge_diagram()
     df = load_and_clean()
     descriptives(df)
     rollout_stage_analysis(df)
@@ -585,6 +743,7 @@ def main() -> None:
     rq2_ridge(frame)
     rq3_clustering(df)
     rq4_logistic(frame)
+    revision_robustness(df, frame)
 
     with open(os.path.join(TAB_DIR, "headline_results.json"), "w") as fh:
         json.dump(RESULTS, fh, indent=2, default=str)

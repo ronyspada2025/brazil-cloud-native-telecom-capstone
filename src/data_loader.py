@@ -55,8 +55,7 @@ SOURCES: dict[str, dict[str, str]] = {
         "file": "anatel_slp_raw.csv",
         "title": "Anatel - Autorizadas do Servico Limitado Privado (SLP)",
         "url": (
-            "https://legado.dados.gov.br/dataset/"
-            "autorizadas-do-servico-limitado-privado-slp"
+            "https://www.anatel.gov.br/dadosabertos/"  # legacy catalog page decommissioned
         ),
         "notes": "Registry of entities authorized to operate private networks.",
     },
@@ -72,7 +71,7 @@ SOURCES: dict[str, dict[str, str]] = {
     "meu_municipio": {
         "file": "anatel_meu_municipio_raw.csv",
         "title": "Anatel - Meu Municipio (Acessos e Cobertura)",
-        "url": "https://dados.gov.br/dataset/meu-municipio-anatel",
+        "url": "https://informacoes.anatel.gov.br/paineis/",  # legacy dataset page decommissioned
         "notes": "Municipal panorama incl. backhaul/fiber availability.",
     },
     "ibge": {
@@ -97,6 +96,37 @@ EXPECTED_COLUMNS: dict[str, list[str]] = {
     "meu_municipio": [],
     "ibge": [],
 }
+
+
+#: The committed analysis input and its expected structure (final report, Table 3 / docs/DATA_PROVENANCE.md).
+MERGED_FILE = PROCESSED_DIR / "merged_municipal_dataset.csv"
+MERGED_SHA256 = "50fac84b16f63d66628741f36686cc076f43c90632a3befe53ca43ed9b316207"
+MERGED_COLUMNS = [
+    "MUNICIP_ID", "NOME", "PIB_MIL_REAIS", "POP_2024", "V93_populacao residente",
+    "V6318_area da unidade terr", "V614_densidade demografic", "UF", "GDP_PER_CAP",
+    "ACC_CDMA_IS_95", "ACC_GSM", "ACC_LTE", "ACC_NR", "ACC_WCDMA",
+    "ERB_CDMA", "ERB_EDGE", "ERB_GSM", "ERB_LTE", "ERB_NR", "ERB_WCDMA",
+    "SLP_STATION_CNT", "PRIVATE_5G_LIC", "AVG_DL_SPEED", "FIBER_ACCESSES", "FIBER_BACKHAUL",
+]
+
+
+def check_merged_dataset() -> bool:
+    """Verify the committed analysis input: presence, 25 expected columns, and SHA-256."""
+    import hashlib
+    if not MERGED_FILE.exists():
+        print(f"MISSING  {MERGED_FILE}")
+        return False
+    h = hashlib.sha256()
+    with open(MERGED_FILE, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    digest = h.hexdigest()
+    cols = list(pd.read_csv(MERGED_FILE, nrows=0).columns)
+    ok_cols = cols == MERGED_COLUMNS
+    ok_sha = digest == MERGED_SHA256
+    print(f"{'OK ' if ok_cols else 'BAD'}  columns   ({len(cols)} found; expected {len(MERGED_COLUMNS)})")
+    print(f"{'OK ' if ok_sha else 'BAD'}  sha256    {digest}")
+    return ok_cols and ok_sha
 
 
 def print_instructions() -> None:
@@ -171,13 +201,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--instructions", action="store_true",
                         help="print download guidance for the 7 datasets")
     parser.add_argument("--check", action="store_true",
-                        help="verify all raw files are present")
+                        help="verify the committed merged dataset (columns + SHA-256) and list raw files")
     args = parser.parse_args(argv)
     if args.instructions:
         print_instructions()
         return 0
     if args.check:
-        return 0 if check_raw_files() else 1
+        ok = check_merged_dataset()
+        check_raw_files()
+        return 0 if ok else 1
     parser.print_help()
     return 0
 

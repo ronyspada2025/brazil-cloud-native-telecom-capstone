@@ -1,46 +1,46 @@
 # QM640 Data Analytics Capstone
 
-## The State of Cloud-Native Transformation on Telecommunications Networks in Brazil
+## Municipal Correlates of Licensed 5G NR Infrastructure in Brazil
+### A Machine Learning Analysis of Rollout, Digital-Infrastructure Readiness, and Private-Network (SLP) Station Intensity as Proxies for Cloud-Native Transformation
 
 **Author:** Rony Anderson Spada Pedroso
 **Institution:** Walsh College
 **Course:** QM640: Data Analytics Capstone
 **Mentor:** Sridhar Srinivas
-**Current report version:** Final report (four-RQ, leakage-audited design)
+**Current report version:** Final report, revised version 1 (September 2026) — responds to the evaluator's assessment: construct-valid naming (NR stations as a proxy; SLP ≠ private 5G), per-capita RQ1 target, two-part count model for RQ2, state-grouped cross-validation, Cramér's V, corrected ROC-AUC reference, associational language throughout
 
 ## Project Overview
 
-This repository supports a data analytics capstone project evaluating the municipal-level state of cloud-native telecommunications transformation in Brazil. It uses open public data from the Brazilian National Telecommunications Agency (Anatel) and the Brazilian Institute of Geography and Statistics (IBGE) to analyze where 5G NR/SA rollout, fiber intensity, digital readiness, and private-network/SLP adoption are concentrated across all 5,571 municipalities.
+This repository supports a data analytics capstone project evaluating the municipal-level state of cloud-native telecommunications transformation in Brazil. It uses open public data from the Brazilian National Telecommunications Agency (Anatel) and the Brazilian Institute of Geography and Statistics (IBGE) to analyze where 5G NR rollout, fiber intensity, digital readiness, and private-network/SLP adoption are concentrated across all 5,571 municipalities.
 
 ## Abstract
 
-**Problem.** Brazil's move to cloud-native, 5G Standalone (SA) networks is spreading unevenly across its 5,571 municipalities, and no study has measured which municipal characteristics actually explain where this infrastructure lands. Carriers and the regulator therefore allocate capital and monitor the coverage obligations of the 2021 spectrum auction without a municipal evidence base.
+**Problem.** Licensed 5G New Radio (NR) infrastructure is spread unevenly across Brazil's 5,571 municipalities, and it is not sufficiently understood how municipal demographic, economic, and existing telecommunications characteristics are associated with that distribution. NR station counts are used as an observable proxy for cloud-native transformation; they do not establish standalone-core or virtualized operation.
 
-**Solution approach.** The study asks four questions — can a municipality's rollout status be predicted, what explains deployment intensity, how do municipalities group by digital readiness, and what drives private-network adoption — and answers each with a matching method: a random forest classifier, ridge regression, k-means clustering with a chi-square test, and logistic regression, all evaluated on held-out data. Predictors are restricted to structural characteristics so that the models cannot simply restate the outcome they are asked to predict.
+**Solution approach.** Four questions — whether high-count NR rollout can be predicted, how NR station intensity is associated with structural characteristics, how municipalities group on digital-infrastructure readiness, and what is associated with private-network (SLP) station intensity — examined with a random forest, a two-part model (presence logistic plus negative-binomial count model with population exposure), k-means with chi-square and Cramér's V, and logistic regression. Predictors are restricted to pre-existing structural characteristics; validation uses held-out data and state-grouped cross-validation.
 
-**Data.** Open administrative records from Anatel (mobile accesses, licensed stations, private-network registry, fiber accesses, measured download speeds) merged with IBGE socioeconomic data for all 5,571 municipalities, so the analysis covers the whole country rather than a sample.
+**Data.** Open Anatel records merged with IBGE socioeconomic data for all 5,571 municipalities; cross-sectional, non-experimental design.
 
-**Technology.** Python (pandas, scikit-learn, statsmodels) on ordinary CPU hardware; a single-command pipeline and a Google Colab notebook regenerate every result from a checksum-verified input.
+**Major results.** High-count NR rollout ROC-AUC = .927 (chance .50; prevalence 22.5%), falling to .818 with a per-capita target — much of the signal is municipal scale. NR station intensity is only weakly associated with structure (NB pseudo-R² = .017), with fiber, population, and the South region significant. Two readiness clusters are associated with macro-region (Cramér's V = .21). SLP intensity ROC-AUC = .810, with reduced performance under state-grouped validation (.758 ± .067).
 
-**Major results.** Whether a municipality is a high-density rollout site is predicted well from structural characteristics alone (ROC-AUC = .927 against a 22.5% baseline), with population size the dominant factor. How intensively municipalities are deployed per capita, by contrast, is largely not explained by those same characteristics. Municipalities separate into two stable readiness groups that follow Brazil's macro-regions, and high private-network intensity concentrates in richer, larger municipalities. Together, these findings separate where cloud-native infrastructure appears from how much of it is deployed.
-
-**Implementation area.** Municipal scores keyed to the IBGE code, usable by Anatel as a coverage-obligation watchlist and by Claro, Vivo, and TIM to prioritize private-network and edge investments.
+**Implementation area.** A screening and prioritization input for telecommunications planning — not a compliance model — keyed to the IBGE municipal code.
 
 ## Research Questions
 
-- **RQ1 — Rollout classification.** Can exogenous socioeconomic and infrastructure characteristics predict whether a municipality is a high-density 5G NR/SA rollout site?
-- **RQ2 — Infrastructure drivers of station density.** Which exogenous characteristics explain the population-normalized intensity of NR/SA station deployment?
-- **RQ3 — Digital-readiness segmentation.** How do municipalities cluster on digital-readiness indicators, and is cluster membership independent of geographic region?
-- **RQ4 — Private-network/SLP intensity drivers.** Which municipal characteristics drive high private-network (SLP) deployment intensity?
+- **RQ1 — High-count NR rollout classification.** Can pre-existing structural characteristics predict whether a municipality is a high-count licensed 5G NR rollout site, and does the result hold with a per-capita target?
+- **RQ2 — Structural correlates of NR station intensity.** To what extent are structural characteristics associated with population-normalized NR station intensity, and which carry significant associations?
+- **RQ3 — Digital-infrastructure readiness segmentation.** How do municipalities cluster on readiness indicators, and how strongly is membership associated with region?
+- **RQ4 — Correlates of SLP station intensity.** Which characteristics are associated with high private-network-related SLP station intensity, and does the association generalize across states?
 
 ## Headline Results (held-out, seed = 42)
 
 | RQ | Model | Key metrics |
 |---|---|---|
-| RQ1 | Random forest (leakage-free, tuned) | Accuracy .915, F1 .808, ROC-AUC .927 (naive spec: .965) |
-| RQ2 | RidgeCV | R² .02 (raw), .06 (log1p), .11 (NR-present conditional) |
-| RQ3 | K-means (k = 2) + chi-square | Silhouette .305, bootstrap ARI .99, χ²(4) = 254.1, p < .001 |
-| RQ4 | Balanced logistic regression | ROC-AUC .810, recall .753, LLR p < .001 |
+| RQ1 | Random forest, count target (leakage-free, tuned) | Accuracy .915, F1 .808, ROC-AUC .927 (chance .50; naive spec .965); state-grouped CV AUC .909 ± .023 |
+| RQ1 | Random forest, per-capita target (robustness) | Accuracy .813, F1 .590, ROC-AUC .818 |
+| RQ2 | Two-part: presence logistic + negative-binomial (population exposure) | Presence AUC .849; NB α = 4.42, pseudo-R² .017, LLR p < .001; ridge R² .02 (raw) – .11 (NR-present) |
+| RQ3 | K-means (k = 2) + chi-square | Silhouette .305, bootstrap ARI .99, χ²(4) = 254.1, p < .001, Cramér's V = .21 |
+| RQ4 | Balanced logistic regression | ROC-AUC .810, recall .753, LLR p < .001; state-grouped CV AUC .758 ± .067 |
 
 ## Reproduction
 
