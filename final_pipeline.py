@@ -282,9 +282,12 @@ def rollout_stage_analysis(df: pd.DataFrame) -> None:
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
     ax.boxplot(
         [df.loc[df["ROLLOUT_STAGE"] == s, "AVG_DL_SPEED"].dropna() for s in order],
-        labels=order,
         showfliers=False,
     )
+    # Set tick labels explicitly: works on every matplotlib version
+    # (the boxplot keyword was renamed labels -> tick_labels in 3.9).
+    ax.set_xticks(range(1, len(order) + 1))
+    ax.set_xticklabels(order)
     ax.set_ylabel("Average download speed (Mbps)")
     ax.set_title("Download speed by NR/SA rollout stage")
     fig.tight_layout()
@@ -510,11 +513,70 @@ def rq4_logistic(frame: pd.DataFrame) -> None:
     RESULTS["rq4"]["llr_p"] = float(fit.llr_pvalue)
 
 
+def workflow_diagram():
+    """Figure 1 of the final report: end-to-end workflow of the pipeline."""
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+
+    fig, ax = plt.subplots(figsize=(11, 6.2))
+    ax.set_xlim(0, 100); ax.set_ylim(0, 60); ax.axis("off")
+
+    def box(x, y, w, h, title, lines, fc="#e8f0fe", ec="#1a56a0"):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.6", fc=fc, ec=ec, lw=1.4))
+        ax.text(x + w / 2, y + h - 2.4, title, ha="center", va="top", fontsize=9.5, weight="bold", color="#123c6b")
+        ax.text(x + w / 2, y + h - 6.2, "\n".join(lines), ha="center", va="top", fontsize=7.6, color="#222222")
+
+    def arrow(x1, y1, x2, y2):
+        ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2), arrowstyle="-|>", mutation_scale=14, lw=1.4, color="#444444"))
+
+    green = dict(fc="#e9f7ec", ec="#1f7a33")
+    box(1, 44, 28, 14, "Data sources (open government)",
+        ["Anatel: mobile accesses, licensed", "stations (ERB), SLP registry, fiber,", "download speed",
+         "IBGE SIDRA: population, GDP,", "area, density"], fc="#fdf1e3", ec="#b06a12")
+    box(36, 44, 28, 14, "Acquisition & merge",
+        ["Wayback snapshots + data-panel", "extraction + file-server metadata", "Join key: 7-digit IBGE code",
+         "merged_municipal_dataset.csv", "(10,107 x 25; 5,571 municipalities)"])
+    box(71, 44, 28, 14, "Cleaning (final_pipeline.py)",
+        ["Drop 193 exact duplicates", "Collapse 4,343 duplicate keys", "Rename to data dictionary",
+         "One row per municipality", "(5,571 x 42)"])
+    arrow(29, 51, 36, 51); arrow(64, 51, 71, 51)
+    box(71, 24, 28, 14, "Feature engineering",
+        ["Per-capita intensities (FIBER_PER_100,", "LTE/NR_ACCESS_PER_100,", "SA_ERB_PER_100K_POP, SLP_PER_100K)",
+         "log1p transforms; REGION from code", "Targets: HIGH_SA_P75, HIGH_SLP"])
+    box(36, 24, 28, 14, "EDA",
+        ["Missingness profile (max 0.11%)", "Skew & zero-inflation diagnostics", "Correlation structure",
+         "Speed by rollout stage (ANOVA)", "Regional deployment shares"])
+    box(1, 24, 28, 14, "Leakage audit",
+        ["Exclude NR_ACCESS_PER_100 &", "AVG_DL_SPEED from RQ1/RQ2", "Exogenous set: GDP, population,",
+         "density, fiber & LTE intensity,", "region dummies"], fc="#fdeaea", ec="#a03a3a")
+    arrow(85, 44, 85, 38); arrow(71, 31, 64, 31); arrow(36, 31, 29, 31)
+    box(1, 3, 22.5, 15, "RQ1 Random forest",
+        ["High-density NR/SA class", "5-fold CV grid tuning", "Stratified 75/25, seed 42",
+         "Acc/F1/ROC-AUC +", "P70/P75/P80 sensitivity"], **green)
+    box(26.5, 3, 22.5, 15, "RQ2 Ridge regression",
+        ["SA_ERB_PER_100K_POP", "RidgeCV (5-fold, alpha grid)", "Raw, log1p, conditional",
+         "R-squared, MAE,", "standardized coefficients"], **green)
+    box(52, 3, 22.5, 15, "RQ3 K-means + chi-square",
+        ["k = 2-6 by silhouette", "20-resample bootstrap ARI", "Cluster profiles",
+         "Chi-square vs. region", "(alpha = .05)"], **green)
+    box(77.5, 3, 21.5, 15, "RQ4 Logistic regression",
+        ["HIGH_SLP intensity target", "Balanced class weights", "statsmodels LLR test",
+         "ROC-AUC, recall,", "coefficients"], **green)
+    arrow(12, 24, 12, 18); arrow(15, 24, 37, 18); arrow(15, 24, 62, 18); arrow(15, 24, 87, 18)
+    ax.text(50, 0.6, "Outputs: reports/figures, reports/tables, headline_results.json  "
+            "(fixed seed = 42; single command: python final_pipeline.py)",
+            ha="center", fontsize=8.2, style="italic", color="#333333")
+    fig.tight_layout()
+    fig.savefig(os.path.join(FIG_DIR, "figure00_workflow.png"), dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> None:
     os.makedirs(FIG_DIR, exist_ok=True)
     os.makedirs(TAB_DIR, exist_ok=True)
     np.random.seed(SEED)
 
+    workflow_diagram()
     df = load_and_clean()
     descriptives(df)
     rollout_stage_analysis(df)

@@ -1,0 +1,290 @@
+{
+  "raw_shape": [
+    10107,
+    25
+  ],
+  "raw_unique_municipalities": 5571,
+  "exact_duplicate_rows_dropped": 193,
+  "rows_after_exact_dedup": 9914,
+  "duplicate_key_rows": 4343,
+  "clean_rows": 5571,
+  "clean_columns": 42,
+  "sa_p70": 6.0,
+  "sa_p75": 9.0,
+  "sa_p80": 12.0,
+  "slp_p75": 1618.3386824338081,
+  "share_with_nr": 0.39346616406390234,
+  "private_5g_lic_mean": 0.9777418775803267,
+  "complete_cases": 5565,
+  "corr_speed_nr": 0.6110935300400808,
+  "corr_speed_density": 0.3639549530394879,
+  "stage_counts": {
+    "High-density NR/SA (> P75)": 1251,
+    "NR present below P75": 941,
+    "No NR station": 3379
+  },
+  "stage_table": {
+    "n": {
+      "High-density NR/SA (> P75)": 1251,
+      "NR present below P75": 941,
+      "No NR station": 3379
+    },
+    "mean_speed": {
+      "High-density NR/SA (> P75)": 60.69,
+      "NR present below P75": 41.01,
+      "No NR station": 38.35
+    },
+    "median_speed": {
+      "High-density NR/SA (> P75)": 55.63,
+      "NR present below P75": 39.08,
+      "No NR station": 36.6
+    },
+    "sd_speed": {
+      "High-density NR/SA (> P75)": 26.65,
+      "NR present below P75": 15.58,
+      "No NR station": 14.94
+    },
+    "median_fiber": {
+      "High-density NR/SA (> P75)": 140.44,
+      "NR present below P75": 91.1,
+      "No NR station": 70.15
+    },
+    "median_sa": {
+      "High-density NR/SA (> P75)": 84.62,
+      "NR present below P75": 34.88,
+      "No NR station": 0.0
+    }
+  },
+  "anova_f": 691.3697048431552,
+  "anova_p": 6.565880114286161e-269,
+  "regional_nr_share": {
+    "Center-West": 33.3,
+    "North": 34.9,
+    "Northeast": 38.7,
+    "South": 46.8,
+    "Southeast": 37.6
+  },
+  "model_n": 5564,
+  "rq1_leakage_free_p75": {
+    "accuracy": 0.9158878504672897,
+    "f1": 0.8091353996737357,
+    "roc_auc": 0.9265975922753652,
+    "cv_f1_mean": 0.7690156490184565,
+    "cv_f1_sd": 0.025761892075714075,
+    "positive_share": 0.22483824586628326,
+    "best_params": {
+      "max_depth": 8,
+      "min_samples_leaf": 1,
+      "n_estimators": 300
+    },
+    "importances": {
+      "GDP_PER_CAP": 0.06304217353243208,
+      "POP_2024": 0.5473095597686749,
+      "POP_DENSITY": 0.18236743912525488,
+      "FIBER_PER_100": 0.10879808994075764,
+      "LTE_ACCESS_PER_100": 0.07807040983732476,
+      "REGION_North": 0.003150380533524346,
+      "REGION_Northeast": 0.0058101681112524995,
+      "REGION_South": 0.007161911105357379,
+      "REGION_Southeast": 0.004289868045421546
+    }
+  },
+  "rq1_naive_p75": {
+    "accuracy": 0.9302659956865564,
+    "f1": 0.8347529812606473,
+    "roc_auc": 0.9656208693178114,
+    "cv_f1_mean": 0.8033670003608476,
+    "cv_f1_sd": 0.01981607431500644,
+    "positive_share": 0.22483824586628326,
+    "best_params": null,
+    "importances": {
+      "GDP_PER_CAP": 0.04833928531159284,
+      "POP_2024": 0.2342706719192735,
+      "POP_DENSITY": 0.1062617962124118,
+      "FIBER_PER_100": 0.06198962124963275,
+      "LTE_ACCESS_PER_100": 0.04964504788597385,
+      "REGION_North": 0.002525312098884748,
+      "REGION_Northeast": 0.005636418092749285,
+      "REGION_South": 0.004515744385593935,
+      "REGION_Southeast": 0.00406978542610792,
+      "NR_ACCESS_PER_100": 0.40388197123926706,
+      "AVG_DL_SPEED": 0.07886434617851233
+    }
+  },
+  "rq1_leakage_free_p70": {
+    "accuracy": 0.8878504672897196,
+    "f1": 0.7657657657657657,
+    "roc_auc": 0.9029593254987643,
+    "cv_f1_mean": 0.7620956231220525,
+    "cv_f1_sd": 0.020474922995867905,
+    "positive_share": 0.25718907260963336,
+    "best_params": null,
+    "importances": {
+      "GDP_PER_CAP": 0.10366331065194953,
+      "POP_2024": 0.46000074965369203,
+      "POP_DENSITY": 0.1666952812171864,
+      "FIBER_PER_100": 0.1300675866875656,
+      "LTE_ACCESS_PER_100": 0.11257563125916228,
+      "REGION_North": 0.004041400985108919,
+      "REGION_Northeast": 0.007232130737890714,
+      "REGION_South": 0.007595133514550086,
+      "REGION_Southeast": 0.008128775292894479
+    }
+  },
+  "rq1_leakage_free_p80": {
+    "accuracy": 0.9230769230769231,
+    "f1": 0.7802874743326489,
+    "roc_auc": 0.9239317671503738,
+    "cv_f1_mean": 0.7959713971100447,
+    "cv_f1_sd": 0.012399310999305713,
+    "positive_share": 0.19051042415528396,
+    "best_params": null,
+    "importances": {
+      "GDP_PER_CAP": 0.08585919449434738,
+      "POP_2024": 0.5073035430491541,
+      "POP_DENSITY": 0.17804829475749478,
+      "FIBER_PER_100": 0.11800315403471306,
+      "LTE_ACCESS_PER_100": 0.09029544353037941,
+      "REGION_North": 0.0033724991174578665,
+      "REGION_Northeast": 0.005463146771361602,
+      "REGION_South": 0.005724213031482955,
+      "REGION_Southeast": 0.005930511213608795
+    }
+  },
+  "rq2_raw": {
+    "r2": 0.023204219144128402,
+    "mae": 43.12274288278883,
+    "alpha": 1000.0,
+    "coefficients": {
+      "GDP_PER_CAP": 5.105871513938143,
+      "POP_2024": 11.144576554927497,
+      "POP_DENSITY": 6.0689428905444975,
+      "FIBER_PER_100": 10.889444641437846,
+      "LTE_ACCESS_PER_100": -2.5283263773993334,
+      "REGION_North": -1.404999398489744,
+      "REGION_Northeast": 1.3085473267738859,
+      "REGION_South": 9.053261871372786,
+      "REGION_Southeast": -2.757277775845305
+    }
+  },
+  "rq2_log": {
+    "r2": 0.06142103919597541,
+    "mae": 1.7495196863684377,
+    "alpha": 672.3357536499335,
+    "coefficients": {
+      "GDP_PER_CAP": 0.14707756441590608,
+      "POP_2024": 0.3299189728491943,
+      "POP_DENSITY": 0.22792580385471056,
+      "FIBER_PER_100": 0.5576538199708344,
+      "LTE_ACCESS_PER_100": -0.10515703670913103,
+      "REGION_North": 0.03320912751681107,
+      "REGION_Northeast": 0.1489249032063107,
+      "REGION_South": 0.05629287275699382,
+      "REGION_Southeast": -0.09429185506141695
+    }
+  },
+  "rq2_naive_raw": {
+    "r2": 0.16497100947878096,
+    "mae": 35.701856518139984,
+    "alpha": 452.035365636025,
+    "coefficients": {
+      "GDP_PER_CAP": 2.390395368578872,
+      "POP_2024": 4.294862603400224,
+      "POP_DENSITY": 0.3474263931440178,
+      "FIBER_PER_100": 2.147369561090467,
+      "LTE_ACCESS_PER_100": -1.4482180944214709,
+      "REGION_North": -1.879775062195541,
+      "REGION_Northeast": 4.748464485468941,
+      "REGION_South": 12.489562459606406,
+      "REGION_Southeast": -2.5481954268006772,
+      "NR_ACCESS_PER_100": 24.385615977491472,
+      "AVG_DL_SPEED": 7.48585762584305
+    }
+  },
+  "rq2_nr_present_n": 2192,
+  "rq2_conditional_log": {
+    "r2": 0.1140074190948559,
+    "mae": 0.6077229291399827,
+    "alpha": 452.035365636025,
+    "coefficients": {
+      "GDP_PER_CAP": 0.08992984345938106,
+      "POP_2024": 0.06932451457651564,
+      "POP_DENSITY": 0.07614584651572269,
+      "FIBER_PER_100": 0.08709348377830314,
+      "LTE_ACCESS_PER_100": 0.025253367976802134,
+      "REGION_North": -0.06342868247304606,
+      "REGION_Northeast": 0.036463223982524516,
+      "REGION_South": 0.11233641741101741,
+      "REGION_Southeast": -0.008814024779081822
+    }
+  },
+  "rq3_silhouettes": {
+    "2": 0.3047367023889025,
+    "3": 0.24064741827804279,
+    "4": 0.2258552043226907,
+    "5": 0.2071015046014134,
+    "6": 0.17576755866253585
+  },
+  "rq3_best_k": 2,
+  "rq3_cluster_sizes": {
+    "1": 4334,
+    "0": 1231
+  },
+  "rq3_higher_cluster": 0,
+  "rq3_profiles": {
+    "GDP_PER_CAP": {
+      "0": 47958.6,
+      "1": 29300.4
+    },
+    "POP_DENSITY": {
+      "0": 419.6,
+      "1": 29.9
+    },
+    "FIBER_PER_100": {
+      "0": 155.4,
+      "1": 82.8
+    },
+    "LTE_ACCESS_PER_100": {
+      "0": 78.0,
+      "1": 76.6
+    },
+    "NR_ACCESS_PER_100": {
+      "0": 29.2,
+      "1": 0.7
+    },
+    "AVG_DL_SPEED": {
+      "0": 64.4,
+      "1": 38.0
+    }
+  },
+  "rq3_chi2": 254.14126041900374,
+  "rq3_chi2_p": 8.344033415489456e-54,
+  "rq3_chi2_dof": 4,
+  "rq3_share_higher_by_region": {
+    "Center-West": 24.0,
+    "North": 14.5,
+    "Northeast": 10.8,
+    "South": 30.7,
+    "Southeast": 29.6
+  },
+  "rq3_ari_mean": 0.9881025690911148,
+  "rq3_ari_sd": 0.0062823410167349904,
+  "rq4": {
+    "roc_auc": 0.8098213596940743,
+    "recall": 0.7528735632183908,
+    "accuracy": 0.7232207045291158,
+    "positive_share": 0.2501797268152408,
+    "coefficients": {
+      "GDP_PER_CAP": 1.040949559593694,
+      "POP_2024": 0.5330769215461802,
+      "POP_DENSITY": -0.05535907051413548,
+      "FIBER_PER_100": 0.21554176171572886,
+      "LTE_ACCESS_PER_100": 0.2834566449873638,
+      "REGION_North": -0.1639512624555704,
+      "REGION_Northeast": -0.5064179257738124,
+      "REGION_South": -0.3417254775742662,
+      "REGION_Southeast": 0.0650948821647622
+    },
+    "llr_p": 7.655704554205875e-258
+  }
+}
